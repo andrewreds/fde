@@ -3,7 +3,7 @@ from Crypto.Random import get_random_bytes
 from Crypto.Cipher import PKCS1_OAEP
 
 AUTH_TYPE_MAP = {}
-for auth_type in ["password"]:
+for auth_type in ["password", "gpg"]:
     try:
         AUTH_TYPE_MAP[auth_type] = __import__("auth_" + auth_type)
     except:
