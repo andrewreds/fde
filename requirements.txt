@@ -1,2 +1,5 @@
 pycryptodome
 black
+sh
+git+https://github.com/blockstack/secret-sharing
+

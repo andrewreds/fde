@@ -1,25 +1,20 @@
 from Crypto.PublicKey import RSA
-from Crypto.Random import get_random_bytes
 from Crypto.Cipher import PKCS1_OAEP
 
 
-def init():
-    password = input("Enter a password: ")
-
+def init_auth(data):
     # TODO: Don't use RSA
-    key = RSA.generate(2048)
 
-    encrypted_key = key.export_key(
-        passphrase=password, pkcs=8, protection="scryptAndAES128-CBC"
+    if "key_size" not in data:
+        data["key_size"] = 4096
+
+    key = RSA.generate(data["key_size"])
+
+    data["enc_private_key"] = key.export_key(
+        passphrase=data["_password"], pkcs=8, protection="scryptAndAES128-CBC"
     )
 
-    return {
-        "enc_private_key": key.export_key(
-            passphrase=password, pkcs=8, protection="scryptAndAES128-CBC"
-        ),
-        "public_key": key.publickey().export_key(),
-        "key_type": "rsa:2048",
-    }
+    data["public_key"] = key.publickey().export_key()
 
 
 def lock_key_slot(data, nonce):
@@ -27,14 +22,12 @@ def lock_key_slot(data, nonce):
 
     cipher_rsa = PKCS1_OAEP.new(public_key)
 
-    return cipher_rsa.encrypt(nonce)
+    data["enc_nonce"] = cipher_rsa.encrypt(nonce)
 
 
-def unlock_key_slot(data, enc_nonce):
-    password = input("What is your password: ")
-
-    private_key = RSA.import_key(data["enc_private_key"], passphrase=password)
-
+def unlock_key_slot(data, unlock_data):
+    private_key = RSA.import_key(data["enc_private_key"], passphrase=unlock_data)
+    
     cipher_rsa = PKCS1_OAEP.new(private_key)
 
-    return cipher_rsa.decrypt(enc_nonce)
+    return cipher_rsa.decrypt(data["enc_nonce"])

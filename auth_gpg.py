@@ -1,24 +1,19 @@
 from sh import gpg
 
 
-def init():
+def init_auth(data):
+    pub_key = gpg("--export", "--armor", data["key_fingerprint"]).stdout
 
-    key_fingerprint = input("enter your key fingerprint")
-
-    pub_key = gpg("--export", "--armor", key_fingerprint).stdout
-
-    return {"public_key": pub_key, "key_fingerprint": key_fingerprint}
+    data["public_key"] = pub_key
 
 
 def lock_key_slot(data, nonce):
-
     """encode the nonce with the public key"""
 
-    return gpg(
+    data["enc_nonce"] = gpg(
         "--encrypt", "--armor", "--recipient", data["key_fingerprint"], _in=nonce
     ).stdout
 
 
-def unlock_key_slot(data, enc_nonce):
-
-    return gpg("--decrypt", _in=enc_nonce).stdout
+def unlock_key_slot(data, unlock_data):
+    return gpg("--decrypt", _in=data["enc_nonce"]).stdout
